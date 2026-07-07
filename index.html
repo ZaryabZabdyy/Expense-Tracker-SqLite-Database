@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Zabdy's Expense Tracker</title>
+    <link rel="stylesheet" href="stylish.css">
+</head>
+<body>
+
+<div class="container">
+    <div id="authZone">
+        <h2 id="authTitle">Login to Zabdy's Expense Tracker</h2>
+        <form id="authForm">
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" id="username" placeholder="Enter username" required>
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="password" placeholder="Enter password" required>
+            </div>
+            <button type="submit" id="authBtn">Login</button>
+        </form>
+        <p style="text-align: center; margin-top: 15px; font-size: 14px;">
+            <a href="#" id="toggleAuth" style="color: #4299e1; text-decoration: none; font-weight: 600;">Create an account (Signup)</a>
+        </p>
+    </div>
+
+    <div id="dashboardZone" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>Welcome, <span id="userGreeting" style="color: #4299e1;"></span>!</h2>
+            <button id="logoutBtn" class="btn-danger">Logout</button>
+        </div>
+        
+        <form id="expenseForm">
+            <div class="form-group">
+                <label>Description:</label>
+                <input type="text" id="description" placeholder="e.g., University Fee, Lunch">
+            </div>
+            <div class="form-group">
+                <label>Category:</label>
+                <select id="category">
+                    <option value="Food">🍔 Food / Dining</option>
+                    <option value="Travel">🚗 Travel & Fuel</option>
+                    <option value="Education">📚 Education / Books</option>
+                    <option value="Bills">⚡ Utilities / Bills</option>
+                    <option value="Entertainment">🎬 Entertainment</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Amount (Rs.):</label>
+                <input type="number" id="amount" placeholder="e.g., 1500">
+            </div>
+            <button type="submit">Add Expense</button>
+        </form>
+
+        <h3>Expense History :</h3>
+        <ul id="expenseList"></ul>
+        
+        <div class="total">
+            <span>Total Expenses:</span>
+            <span>Rs. <span id="totalAmount">0</span></span>
+        </div>
+    </div>
+
+    <div id="message" style="display: none;"></div>
+</div>
+
+<script>
+    let currentUserId = null;
+    let isLoginMode = true;
+
+    const authZone = document.getElementById('authZone');
+    const dashboardZone = document.getElementById('dashboardZone');
+    const authForm = document.getElementById('authForm');
+    const toggleAuth = document.getElementById('toggleAuth');
+    const messageDiv = document.getElementById('message');
+
+    function showMsg(text, type) {
+        messageDiv.style.display = "block";
+        messageDiv.className = type;
+        messageDiv.innerText = text;
+        setTimeout(() => { messageDiv.style.display = "none"; }, 4000);
+    }
+
+    toggleAuth.addEventListener('click', (e) => {
+        e.preventDefault();
+        isLoginMode = !isLoginMode;
+        document.getElementById('authTitle').innerText = isLoginMode ? "Login to Digital Khata" : "Create New Account";
+        document.getElementById('authBtn').innerText = isLoginMode ? "Login" : "Register / Signup";
+        toggleAuth.innerText = isLoginMode ? "Create an account (Signup)" : "Already have an account? Login";
+    });
+
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const endpoint = isLoginMode ? '/api/login' : '/api/signup';
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                showMsg(data.error, "error");
+            } else {
+                if (isLoginMode) {
+                    currentUserId = data.userId;
+                    document.getElementById('userGreeting').innerText = data.username;
+                    authZone.style.display = "none";
+                    dashboardZone.style.display = "block";
+                    loadExpenses();
+                } else {
+                    showMsg(data.message, "success");
+                    toggleAuth.click();
+                }
+            }
+        } catch (err) { showMsg("Connection error.", "error"); }
+    });
+
+    async function loadExpenses() {
+        if (!currentUserId) return;
+        try {
+            const res = await fetch(`/api/expenses/${currentUserId}`);
+            const data = await res.json();
+            
+            const list = document.getElementById('expenseList');
+            list.innerHTML = '';
+            let total = 0;
+
+            data.forEach(exp => {
+                const date = new Date(exp.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="expense-info">
+                        <span class="exp-title">${exp.description}</span>
+                        <span class="exp-meta"><small>${date}</small> • <i>${exp.category}</i></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <strong>Rs. ${exp.amount}</strong>
+                        <button class="delete-btn" onclick="deleteExpense(${exp.Expense_ID})">🗑️</button>
+                    </div>
+                `;
+                list.appendChild(li);
+                total += exp.amount;
+            });
+            document.getElementById('totalAmount').innerText = total;
+        } catch (err) { console.error(err); }
+    }
+
+    document.getElementById('expenseForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const description = document.getElementById('description').value;
+        const category = document.getElementById('category').value;
+        const amount = parseFloat(document.getElementById('amount').value);
+
+        try {
+            const res = await fetch('/api/expenses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description, amount, category, userId: currentUserId })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                showMsg(data.error, "error");
+            } else {
+                showMsg("Expense added!", "success");
+                document.getElementById('expenseForm').reset();
+                loadExpenses();
+            }
+        } catch (err) { showMsg("Failed to add expense.", "error"); }
+    });
+
+    async function deleteExpense(id) {
+        if (!confirm("Kya aap yeh expense delete karna chahte hain?")) return;
+        try {
+            const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                showMsg("Expense permanently deleted!", "success");
+                loadExpenses();
+            }
+        } catch (err) { showMsg("Delete process failed.", "error"); }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        currentUserId = null;
+        authForm.reset();
+        dashboardZone.style.display = "none";
+        authZone.style.display = "block";
+    });
+</script>
+</body>
+</html>
