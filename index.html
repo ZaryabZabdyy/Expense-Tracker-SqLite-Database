@@ -86,7 +86,7 @@
     toggleAuth.addEventListener('click', (e) => {
         e.preventDefault();
         isLoginMode = !isLoginMode;
-        document.getElementById('authTitle').innerText = isLoginMode ? "Login to Digital Khata" : "Create New Account";
+        document.getElementById('authTitle').innerText = isLoginMode ? "Login to Zabdy's Expense Tracker" : "Create New Account";
         document.getElementById('authBtn').innerText = isLoginMode ? "Login" : "Register / Signup";
         toggleAuth.innerText = isLoginMode ? "Create an account (Signup)" : "Already have an account? Login";
     });
@@ -178,7 +178,7 @@
     });
 
     async function deleteExpense(id) {
-        if (!confirm("Kya aap yeh expense delete karna chahte hain?")) return;
+        if (!confirm("Are you sure to delete this expense?")) return;
         try {
             const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
             if (res.ok) {
