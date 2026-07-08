@@ -1,6 +1,32 @@
-# 📊 Zabdy's Expense Tracker – Smart Financial Management 
+# 📊 Zabdy's Expense Tracker – Smart Financial Management (Pro Edition)
 
 Zabdy's Expense Tracker is a secure, lightweight Full-Stack Web Application built to manage daily personal finances. Unlike basic trackers that use temporary browser arrays, this system implements a structured backend with direct relational data persistence. It allows multiple users to register private accounts, securely login, and explicitly track their expenditures across customized categories without any data interference.
+---
+
+## 🔄 Project Working Flow
+
+The application follows a structured request-response cycle between the client interface, the server controller, and the relational storage engine:
+
+[ Frontend UI ] <--- Asynchronous HTTP (Fetch) ---> [ Node.js Express Server ] <---> [ SQLite DB (.db File) ]
+
+
+1. **Authentication Gate (Signup/Login):**
+   * The user interacts with the frontend form. Submitting credentials triggers an asynchronous `POST` request to `/api/signup` or `/api/login`.
+   * The Express server receives the request, queries the SQLite database, validates the credentials, and responds with the unique `User_ID`.
+
+2. **Dashboard Initialization (Data Fetching - Read):**
+   * Upon a successful login, the UI dynamically switches to the dashboard panel and automatically fires a `GET` request to `/api/expenses/:userId`.
+   * The backend executes an SQL query structured with a sorting filter (`ORDER BY created_at DESC`) to fetch only that specific user's logs and maps them dynamically onto the screen.
+
+3. **Transaction Routing (Data Ingestion - Create):**
+   * When a user inputs a new description, select tag category, and amount, a `POST` request payload containing the form data along with the active `User_ID` is transmitted to `/api/expenses`.
+   * The backend validates the inputs, updates the underlying storage database using safe parameterized tokens, and reflects the updated entries back onto the frontend immediately.
+
+4. **Record Deletion (Data Management - Delete):**
+   * Clicking the trash icon (🗑️) prompts a structural `DELETE` request routing directly via `/api/expenses/:expenseId`.
+   * The row is instantly dropped from the physical schema table, and the active total metrics are automatically recalculated across the frontend client wrapper.
+
+---
 
 ---
 
