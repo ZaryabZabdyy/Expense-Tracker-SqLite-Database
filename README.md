@@ -1,4 +1,4 @@
-# 📊 Zabdy's Expense Tracker – Smart Financial Management (Pro Edition)
+# 📊 Zabdy's Expense Tracker – Smart Financial Management 
 
 Zabdy's Expense Tracker is a secure, lightweight Full-Stack Web Application built to manage daily personal finances. Unlike basic trackers that use temporary browser arrays, this system implements a structured backend with direct relational data persistence. It allows multiple users to register private accounts, securely login, and explicitly track their expenditures across customized categories without any data interference.
 
