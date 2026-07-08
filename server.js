@@ -78,9 +78,9 @@ app.get('/api/expenses/:userId', (req, res) => {
 app.post('/api/expenses', (req, res) => {
     const { description, amount, category, userId } = req.body;
 
-    if (!description || description.trim() === "") return res.status(400).json({ error: "Description likhna zaroori hai!" });
-    if (!amount || amount <= 0) return res.status(400).json({ error: "Sahi Amount enter karein!" });
-    if (!category) return res.status(400).json({ error: "Category select karna zaroori hai!" });
+    if (!description || description.trim() === "") return res.status(400).json({ error: "Dscription Must Be Written! " });
+    if (!amount || amount <= 0) return res.status(400).json({ error: "Enter Correct Amount!" });
+    if (!category) return res.status(400).json({ error: "Category Must Be Selected! " });
     if (!userId) return res.status(400).json({ error: "User identity missing!" });
 
     const query = `INSERT INTO Expenses (description, amount, category, User_ID) VALUES (?, ?, ?, ?)`;
